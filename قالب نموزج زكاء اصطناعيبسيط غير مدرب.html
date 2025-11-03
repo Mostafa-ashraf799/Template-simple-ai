@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>نظام الذكاء الاصطناعي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .chat-message { animation: slideIn 0.25s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .pulse { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
+    .thin-scroll::-webkit-scrollbar { width: 6px; height:6px }
+    .thin-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius:8px }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen text-white">
+  <div class="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
+    <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 mb-4 sm:mb-6 p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-2xl">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold">نظام الذكاء الاصطناعي القابل للتدريب</h1>
+            <p class="text-white/70 text-sm sm:text-base">يقرأ ملف القاعدة ai-knowledge-base.json الموجود بنفس المجلد ويحفظ المحادثات محلياً</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-sm">
+          <span id="kbStatus" class="text-green-300">جارٍ التحميل...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+      <!-- Chat area -->
+      <div class="lg:col-span-3">
+        <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+          <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+              <span class="font-bold">الذكاء الاصطناعي متصل</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <button id="newSessionBtn" class="bg-white/20 hover:bg-white/30 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm">➕ محادثة جديدة</button>
+              <button id="clearChatBtn" class="bg-white/20 hover:bg-white/30 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm">🗑️ مسح المحادثة</button>
+            </div>
+          </div>
+
+          <div id="chatMessages" class="h-[500px] sm:h-[560px] overflow-y-auto p-4 sm:p-6 space-y-4 thin-scroll">
+            <div class="text-center text-white/60 mt-16 sm:mt-20">
+              <p class="text-lg">مرحباً! سأستخدم قاعدة المعرفة من الملف المرفق</p>
+            </div>
+          </div>
+
+          <div class="p-4 sm:p-6 bg-white/5 border-t border-white/10">
+            <div class="flex gap-2 sm:gap-3">
+              <input id="userInput" type="text" placeholder="اكتب سؤالك هنا..." class="flex-1 bg-white/10 text-white placeholder-white/50 px-4 sm:px-6 py-3 sm:py-4 rounded-full border border-white/20 focus:outline-none focus:border-purple-400 transition-all">
+              <button id="sendMessageBtn" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full hover:from-purple-600 hover:to-pink-600 transition-all font-bold shadow-lg text-sm sm:text-base">إرسال</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div id="sidebar" class="lg:col-span-1">
+        <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-4 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg sm:text-xl font-bold">المحادثات</h3>
+            <input id="searchSessions" placeholder="بحث..." class="bg-white/10 text-white placeholder-white/50 px-2 py-1 rounded-lg text-xs sm:text-sm focus:outline-none">
+          </div>
+          <div class="space-y-3 max-h-[400px] sm:max-h-[420px] overflow-y-auto thin-scroll" id="sessionsList"></div>
+          <button id="deleteAllSessionsBtn" class="w-full bg-red-500 hover:bg-red-600 py-2 rounded-lg text-sm">🗑️ مسح الكل</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let knowledgeBase = {};
+    const SESSIONS_KEY = 'ai_chat_sessions_v2';
+    const KB_FILENAME = 'ai-knowledge-base.json';
+    let sessions = [];
+    let currentSessionId = null;
+
+    function uid() { return 's_' + Date.now() + '_' + Math.random().toString(36).slice(2,9); }
+    function fmtDate(ts){ const d=new Date(ts); return d.toLocaleString('ar-EG'); }
+
+    function loadSessions(){ try{ const raw=localStorage.getItem(SESSIONS_KEY); sessions=raw?JSON.parse(raw):[]; }catch{ sessions=[]; } }
+    function saveSessions(){ localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); }
+
+    function createNewSession(){ const id=uid(); const s={id,title:'محادثة '+new Date().toLocaleString('ar-EG'),createdAt:Date.now(),messages:[]}; sessions.unshift(s); currentSessionId=id; saveSessions(); renderSessionsList(); renderCurrentSession(); }
+    function getCurrentSession(){ return sessions.find(s=>s.id===currentSessionId); }
+
+    function renderSessionsList(f=''){ const l=document.getElementById('sessionsList'); l.innerHTML=''; const filter=f.toLowerCase(); sessions.forEach(s=>{ if(f && !(s.title.toLowerCase().includes(filter))) return; const e=document.createElement('div'); e.className='bg-white/5 p-3 rounded-lg border border-white/10 hover:bg-white/10 cursor-pointer'; e.innerHTML=`<div class='font-bold text-sm'>${s.title}</div><div class='text-xs text-white/70'>${fmtDate(s.createdAt)}</div>`; e.onclick=()=>{currentSessionId=s.id;renderCurrentSession();}; l.appendChild(e); }); }
+
+    function renderCurrentSession(){ const m=document.getElementById('chatMessages'); m.innerHTML=''; const s=getCurrentSession(); if(!s){m.innerHTML='<p class="text-center text-white/60 mt-20">ابدأ محادثة جديدة</p>';return;} s.messages.forEach(msg=>addMessageToDOM(msg.text,msg.role==='user')); }
+
+    function addMessageToDOM(t,u){ const m=document.getElementById('chatMessages'); const d=document.createElement('div'); d.className=`chat-message flex ${u?'justify-end':'justify-start'}`; d.innerHTML=`<div class='max-w-[80%] p-3 sm:p-4 rounded-2xl ${u?'bg-gradient-to-r from-purple-500 to-pink-500':'bg-white/20'}'><p class='whitespace-pre-wrap text-sm sm:text-base'>${t}</p></div>`; m.appendChild(d); m.scrollTop=m.scrollHeight; }
+
+    function appendMessage(r,t){ const s=getCurrentSession(); if(!s)return; s.messages.push({role:r==='user'?'user':'bot',text:t}); saveSessions(); addMessageToDOM(t,r==='user'); }
+
+    function searchKnowledgeBase(q){ const l=q.toLowerCase().trim(); for(const [p,d] of Object.entries(knowledgeBase)){ for(const k of p.split('|')) if(l.includes(k.trim().toLowerCase())){ const r=d.responses?d.responses[Math.floor(Math.random()*d.responses.length)]:''; return{found:true,response:r}; } } return{found:false}; }
+
+    async function tryLoadKB(){ try{ const res=await fetch('./'+KB_FILENAME,{cache:'no-store'}); if(!res.ok)throw 0; knowledgeBase=await res.json(); document.getElementById('kbStatus').textContent='تم تحميل القاعدة'; }catch{ document.getElementById('kbStatus').textContent='لم يتم العثور على القاعدة'; } }
+
+    function sendMessage(){ const i=document.getElementById('userInput'); const t=i.value.trim(); if(!t)return; i.value=''; appendMessage('user',t); const typing=document.createElement('div'); typing.id='typing'; typing.className='flex justify-start'; typing.innerHTML='<div class="bg-white/20 text-white p-3 sm:p-4 rounded-2xl"><span class="pulse">جاري التفكير...</span></div>'; document.getElementById('chatMessages').appendChild(typing); setTimeout(()=>{typing.remove(); const r=searchKnowledgeBase(t); appendMessage('bot',r.found?r.response:'🔍 لم أجد إجابة في القاعدة');},700); }
+
+    document.addEventListener('DOMContentLoaded',async()=>{ loadSessions(); await tryLoadKB(); if(!sessions.length)createNewSession(); else{currentSessionId=sessions[0].id;renderSessionsList();renderCurrentSession();} document.getElementById('sendMessageBtn').onclick=sendMessage; document.getElementById('userInput').onkeypress=e=>{if(e.key==='Enter')sendMessage();}; document.getElementById('newSessionBtn').onclick=createNewSession; document.getElementById('clearChatBtn').onclick=()=>{if(!getCurrentSession())return;if(confirm('مسح المحادثة الحالية؟')){getCurrentSession().messages=[];saveSessions();renderCurrentSession();}}; document.getElementById('deleteAllSessionsBtn').onclick=()=>{if(confirm('مسح جميع المحادثات؟')){sessions=[];currentSessionId=null;saveSessions();renderSessionsList();renderCurrentSession();}}; document.getElementById('searchSessions').oninput=e=>renderSessionsList(e.target.value); });
+  </script>
+</body>
+</html>
